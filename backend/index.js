@@ -5,16 +5,19 @@ const connectToDb = require('./config/db')
 const userModel = require("./models/userModel")
 const cookieParser = require("cookie-parser")
 const authRouter = require('./Routes/authRoute')
+const cors = require('cors');
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
+app.use(cors({
+   origin : process.env.FRONTEND_URL,
+   credentials : true,
+}))
 
 app.use("/api/auth", authRouter)
 
-app.get('/', (req, res)=>{
-  res.send("hello")
-})
+
 
 
 
