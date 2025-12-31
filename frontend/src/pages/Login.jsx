@@ -5,15 +5,38 @@ import logo from "../assets/logo.jpg";
 import google from "../assets/google.jpg";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useContext } from "react";
+import { UserContext } from "../context/userContext";
+import {ClipLoader} from 'react-spinners';
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(true);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { serverUrl } = useContext(UserContext);
+
+
+  const loginHandler = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await axios.post(`${serverUrl}/api/auth/login`, { email, password }, { withCredentials: true });
+      console.log(res.data);
+      setLoading(false);
+      navigate("/");
+       toast.success("Login Successfully");
+    } catch (error) {
+      setLoading(false);
+      toast.error(error.response.data.message);
+    }
+  };
   return (
     <div className="bg-[#dddbdb] w-screen h-screen flex justify-center items-center">
-      <form className="w-[90%] md:w-200 h-150 bg-white shadow-xl rounded-2xl flex ">
+      <form onSubmit={loginHandler} className="w-[90%] md:w-200 h-150 bg-white shadow-xl rounded-2xl flex ">
         {/* left div */}
         <div className="md:w-[50%] w-full h-full flex flex-col items-center justify-center gap-3">
           {/* heading */}
@@ -29,6 +52,8 @@ const Login = () => {
             </label>
             <input
               type="text"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="border w-full h-8.75 border-[#e7e6e6] text-3.75 px-5"
               placeholder="Enter Email"
             />
@@ -41,6 +66,8 @@ const Login = () => {
             </label>
             <input
               type={show ? "password" : "text"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="border w-full h-8.75 border-[#e7e6e6] text-3.75 px-5"
               placeholder="Enter Password"
             />
@@ -52,8 +79,12 @@ const Login = () => {
           </div>
 
           {/* Login button */}
-          <button className="w-[80%] h-10 bg-black text-white cursor-pointer flex justify-center items-center rounded-[5px]">
-            Login
+          <button
+            type="submit"
+            className="w-[80%] h-10 bg-black text-white cursor-pointer flex justify-center items-center rounded-[5px]"
+            disabled={loading}
+          >
+           {loading ? <ClipLoader size={30} color={"#ffffff"} /> : "Login"}
           </button>
 
           {/* forgot password */}
