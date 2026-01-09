@@ -4,9 +4,10 @@ import Signup from './pages/Signup'
 import Login from './pages/Login'
 import { Route, Routes } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify';
+import getCurrentUser from './customHooks/getCurrentUser'
 function App() {
-
-
+  
+  getCurrentUser();
   return (
     <>
      <ToastContainer/>
@@ -20,3 +21,4 @@ function App() {
 }
 
 export default App
+
