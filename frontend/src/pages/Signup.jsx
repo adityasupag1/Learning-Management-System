@@ -6,9 +6,9 @@ import google from "../assets/google.jpg";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useContext } from "react";
-import { UserContext } from "../context/userContext";
 import {ClipLoader} from 'react-spinners';
+import { useDispatch } from "react-redux";
+import { setUserData } from "../redux/slices/userSlice";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -16,19 +16,24 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
   const [show, setShow] = useState(true);
-  cosnt [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const {serverUrl} = useContext(UserContext);
+   
+
   const handleSignup = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const res = await axios.post(
-        `${serverUrl}/api/auth/signup`,
+        'http://localhost:8000/api/auth/signup',
         { name, email, password, role },
         { withCredentials: true }
       );
+
+      dispatch(setUserData(res.data));
+
 
       console.log(res.data);
       setLoading(false);
