@@ -7,9 +7,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useContext } from "react";
-import { UserContext } from "../context/userContext";
 import {ClipLoader} from 'react-spinners';
+import { useDispatch } from "react-redux";
+import { setUserData } from "../redux/slices/userSlice";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -17,14 +17,17 @@ const Login = () => {
   const [show, setShow] = useState(true);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { serverUrl } = useContext(UserContext);
+   const dispatch = useDispatch();
+
 
 
   const loginHandler = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post(`${serverUrl}/api/auth/login`, { email, password }, { withCredentials: true });
+      const res = await axios.post('http://localhost:8000/api/auth/login', { email, password }, { withCredentials: true });
+
+      dispatch(setUserData(res.data))
       console.log(res.data);
       setLoading(false);
       navigate("/");
