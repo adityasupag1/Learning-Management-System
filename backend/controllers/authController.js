@@ -31,15 +31,16 @@ module.exports.signupController = async (req, res) => {
     })
 
     // now generate jwt token
-    const token =   generateToken({ id: user._id })
+    const token = generateToken({ id: user._id })
 
     // storing them into cookie
-    res.cookie('token', token, {
+    res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "none",
+      secure: false,      // OK for http://localhost
+      sameSite: "lax",    // 🔴 THIS IS THE KEY FIX
       maxAge: 7 * 24 * 60 * 60 * 1000,
-    })
+    });
+
 
     res.status(201).json({ name: user.name, message: "User Created Successfully" })
 
@@ -53,7 +54,7 @@ module.exports.loginController = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-     return res.status(400).json({ message: "Please Fill all required Field" })
+      return res.status(400).json({ message: "Please Fill all required Field" })
     }
 
     // is user exist or not
@@ -64,22 +65,23 @@ module.exports.loginController = async (req, res) => {
     }
 
     // password checking
-    const isValid =await bcrypt.compare(password, existUser.password)
+    const isValid = await bcrypt.compare(password, existUser.password)
 
     if (!isValid) {
       return res.status(400).json({ message: "Please Enter Valid Password" });
     }
 
     // token generate
-    const token =  generateToken({ id: existUser._id });
+    const token = generateToken({ id: existUser._id });
 
     // storing in the browser cookie
-    res.cookie('token', token, {
+    res.cookie("token", token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "none",
+      secure: false,      // OK for http://localhost
+      sameSite: "lax",    // 🔴 THIS IS THE KEY FIX
       maxAge: 7 * 24 * 60 * 60 * 1000,
-    })
+    });
+
 
     res.status(200).json({ name: existUser.name, message: "LogIn Successfully" })
 
