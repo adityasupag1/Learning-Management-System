@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt')
 const validator = require("validator");
 const userModel = require('../models/userModel')
 const generateToken = require("../utils/generateToken")
+const sendMail = require('../utils/sendMail')
 
 module.exports.signupController = async (req, res) => {
   try {
@@ -97,5 +98,65 @@ module.exports.logoutController = async (req, res) => {
     res.status(200).json({ message: "LogOut Successfully" })
   } catch (error) {
     res.status(500).json({ message: `Error in Login  ${error}` })
+  }
+}
+
+module.exports.sendOtpController = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await userModel.findOne({ email });
+    if (!user) return res.status(400).json({ message: "User Not Found" });
+
+    const otp = Math.floor(1000 + Math.random() * 9000).toString;
+    user.resetOtp = otp;
+    user.otpExpires = Date.now() + 5 * 60 * 1000;
+    user.isOtpVerified = false;
+
+    await user.save();
+    await sendMail(email, otp);
+    return res.status(200).json({ message: "Otp sent Successfully" })
+
+  } catch (error) {
+    res.status(500).json({ message: `Send Otp Error  ${error}` })
+  }
+}
+
+
+module.exports.verifyOtpController = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await userModel.findOne({ email });
+    if (!user || user.resetOtp !== otp || user.otpExpires < Date.now())
+      res.status(404).json({ message: "Invalid Otp" });
+
+    user.isOtpVerified = true;
+    user.resetOtp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+    return res.status(200).json({ message: "Otp Verified Successfully" })
+
+
+  } catch (error) {
+    res.status(500).json({ message: `Verify Otp error  ${error}` })
+  }
+}
+
+
+module.exports.resetPasswrodController = async(req,res)=>{
+  try {
+     const {email, newpassword}= req.body;
+    const user =await userModel.findOne({email});
+    if(!user || user.isOtpVerified)
+      return res.status(404).json({message: "Otp verification is required"})
+
+    const salt = await bcrypt.genSalt(10)
+    const hashPassword = await bcrypt.hash(newpassword, salt);
+    user.password= hashPassword;
+    user.isOtpVerified = false;
+    await user.save();
+    return res.status(200).json({message: "Reset Password Successfully"})
+
+  } catch (error) {
+     return res.status(200).json({message: "Reset Password Error"})
   }
 }
