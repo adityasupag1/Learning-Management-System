@@ -7,105 +7,166 @@ import { serverUrl } from "../config/server";
 import { setUserData } from "../redux/slices/userSlice";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { GiHamburgerMenu } from "react-icons/gi";
-import { GiSplitCross } from "react-icons/gi";
+import { GiHamburgerMenu, GiSplitCross } from "react-icons/gi";
 
 const Navbar = () => {
   const dispatch = useDispatch();
-  const { userData } = useSelector((state) => state.user);
   const navigate = useNavigate();
-  const [show, setShow] = useState(false);
-  const [showHam, setShowHam]=useState(false)
 
+  // 🔹 Redux auth state
+  const { userData } = useSelector((state) => state.user);
+
+  // 🔹 UI states
+  const [showProfile, setShowProfile] = useState(false);
+  const [showHam, setShowHam] = useState(false);
+
+  // 🔹 Logout handler
   const handleLogout = async () => {
     try {
-      const res = await axios.get(`${serverUrl}/api/auth/logout`, { withCredentials: true });
-      dispatch(setUserData(null));
-      // console.log(res);
-      // console.log(res.data.message);
+      const res = await axios.get(
+        `${serverUrl}/api/auth/logout`,
+        { withCredentials: true }
+      );
+
+      dispatch(setUserData(null)); // clear redux auth
       toast.success(res.data.message);
+      navigate("/login");
+
     } catch (error) {
-      console.log(error);
-      toast.error(error.data.message);
+      toast.error(error.response?.data?.message || "Logout failed");
     }
   };
 
   return (
     <div>
-      <div className="w-full h-17.5 fixed top-0 px-5 py-2.5 flex items-center justify-between bg-[#00000047] z-10">
-        <div className="lg:w-[20%]w-[40%] lg:pl-12.5 ">
-          <img src={logo} alt="" className="w-15 rounded-[5px] border-2 border-white  " />
+      {/* ===================== MAIN NAVBAR ===================== */}
+      <div className="w-full fixed top-0 px-5 py-2.5 flex items-center justify-between bg-[#00000047] z-10">
+
+        {/* ---------- LOGO ---------- */}
+        <div className="lg:w-[20%] w-[40%] lg:pl-12.5">
+          <img
+            src={logo}
+            alt="logo"
+            className="w-15 rounded-[5px] border-2 border-white"
+          />
         </div>
 
-        <div className="w-[30%] lg:flex items-center justify-center gap-4 hidden">
-          {!userData && (
-            <IoPersonCircle
-              className="w-12.5  h-12.5 fill-black cursor-pointer"
-              onClick={() => setShow((prev) => !prev)}
-            />
-          )}
+        {/* ---------- DESKTOP MENU ---------- */}
+        {/* IMPORTANT: hidden FIRST, lg:flex SECOND (fixes refresh issue) */}
+        <div className="w-[30%] hidden lg:flex items-center justify-center gap-4">
 
-          {userData && (
+          {/* Profile icon / avatar */}
+          {!userData ? (
+            <IoPersonCircle
+              className="w-12.5 h-12.5 fill-black cursor-pointer"
+              onClick={() => setShowProfile(prev => !prev)}
+            />
+          ) : (
             <div
-              className="w-12.5  h-12.5  rounded-full flex justify-center items-center border-2 border-white  text-white bg-[black] text-4.5  cursor-pointer"
-              onClick={() => setShow((prev) => !prev)}
+              className="w-12.5 h-12.5 rounded-full flex items-center justify-center border-2 border-white bg-black text-white text-4.5 cursor-pointer"
+              onClick={() => setShowProfile(prev => !prev)}
             >
-              {userData?.name.slice(0, 1).toUpperCase()}
+              {userData.name.charAt(0).toUpperCase()}
             </div>
           )}
+
+          {/* Educator dashboard (ROLE BASED) */}
           {userData?.role === "educator" && (
-            <div className="px-5 py-2.5 border-2 border-white  text-white bg-[black]   rounded-[10px] text-4.5 font-light cursor-pointer">
+            <div className="px-5 py-2.5 border-2 border-white text-white bg-black rounded-[10px] cursor-pointer">
               Dashboard
             </div>
           )}
+
+          {/* Login / Logout */}
           {!userData ? (
             <span
-              className="px-5 py-2.5 border-2 border-white  text-white bg-[black]   rounded-[10px] text-4.5 font-light cursor-pointer"
+              className="px-5 py-2.5 border-2 border-white text-white bg-black rounded-[10px] cursor-pointer"
               onClick={() => navigate("/login")}
             >
               Login
             </span>
           ) : (
             <span
-              className="px-5 py-2.5 border-2  text-black bg-white  rounded-[10px] text-4.5 shadow-black font-light cursor-pointer"
+              className="px-5 py-2.5 border-2 text-black bg-white rounded-[10px] cursor-pointer"
               onClick={handleLogout}
             >
               Logout
             </span>
           )}
-          {show && (
-            <div className="absolute top-[110%] right-[15%] flex items-center flex-col justify-center gap-2 text-[16px] rounded-md bg-white px-3.75 py-2.5 border-2 border-black hover:border-white hover:text-white cursor-pointer hover:bg-black">
-              <span className="bg-black text-white px-7.5 py-2.5 rounded-2xl hover:bg-gray-600">My Profile</span>
-              <span className="bg-black text-white px-7.5 py-2.5 rounded-2xl hover:bg-gray-600">My Courses</span>
+
+          {/* ---------- PROFILE DROPDOWN ---------- */}
+          {showProfile && userData && (
+            <div className="absolute top-[110%] right-[15%] flex flex-col gap-2 bg-white px-4 py-3 border-2 border-black rounded-md">
+              <span 
+              onClick={()=>navigate('/profile')}
+              className="bg-black text-white px-6 py-2 rounded-xl cursor-pointer">
+                My Profile
+              </span>
+              <span className="bg-black text-white px-6 py-2 rounded-xl cursor-pointer">
+                My Courses
+              </span>
             </div>
           )}
         </div>
 
+        {/* ---------- HAMBURGER ICON (MOBILE) ---------- */}
         <GiHamburgerMenu
           className="w-8.75 h-8.75 lg:hidden text-black cursor-pointer"
-          onClick={() => setShowHam((prev) => !prev)}
+          onClick={() => setShowHam(true)}
         />
 
+        {/* ===================== MOBILE MENU ===================== */}
         <div
-          className={`fixed top-0 left-0 w-screen h-screen bg-[#000000d6] flex items-center justify-center flex-col gap-5 z-10 lg:hidden
-          transition-transform duration-600
-         ${showHam ? "translate-x-0" : "translate-x-full"}
+          className={`fixed top-0 left-0 w-screen h-screen bg-[#000000d6] flex flex-col items-center justify-center gap-5 z-10 lg:hidden
+          transition-transform duration-500
+          ${showHam ? "translate-x-0" : "translate-x-full"}
         `}
         >
+          {/* Close icon */}
           <GiSplitCross
-            className="w-8.75 h-8.75 fill-white absolute top-5 right-[4%] cursor-pointer"
-            onClick={() => setShowHam((prev) => !prev)}
+            className="w-8.75 h-8.75 fill-white absolute top-5 right-5 cursor-pointer"
+            onClick={() => setShowHam(false)}
           />
 
-           {userData && (
-            <div
-              className="w-12.5  h-12.5  rounded-full flex justify-center items-center border-2 border-white  text-white bg-[black] text-4.5  cursor-pointer"
-              onClick={() => setShow((prev) => !prev)}
-            >
-              {userData?.name.slice(0, 1).toUpperCase()}
+          {/* User avatar */}
+          {userData && (
+            <div className="w-12.5 h-12.5 rounded-full flex items-center justify-center border-2 border-white bg-black text-white text-4.5">
+              {userData.name.charAt(0).toUpperCase()}
             </div>
           )}
-          
+
+          {/* Mobile menu items */}
+          <div 
+          onClick={()=>navigate('/profile')}
+          className="w-50 h-16.25 border-2 border-white text-white bg-black flex items-center justify-center rounded-[10px] cursor-pointer">
+            My Profile
+          </div>
+
+          <div className="w-50 h-16.25 border-2 border-white text-white bg-black flex items-center justify-center rounded-[10px] cursor-pointer">
+            My Courses
+          </div>
+
+          {userData?.role === "educator" && (
+            <div className="w-50 h-16.25 border-2 border-white text-white bg-black flex items-center justify-center rounded-[10px] cursor-pointer">
+              Dashboard
+            </div>
+          )}
+
+          {!userData ? (
+            <span
+              className="w-[200px] h-[65px] border-2 border-white text-white bg-black flex items-center justify-center rounded-[10px] cursor-pointer"
+              onClick={() => navigate("/login")}
+            >
+              Login
+            </span>
+          ) : (
+            <span
+              className="w-[200px] h-[65px] border-2 border-white text-white bg-black flex items-center justify-center rounded-[10px] cursor-pointer"
+              onClick={handleLogout}
+            >
+              Logout
+            </span>
+          )}
         </div>
       </div>
     </div>
