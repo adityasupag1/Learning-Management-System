@@ -21,22 +21,28 @@ const Login = () => {
 
 
 
-  const loginHandler = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await axios.post('http://localhost:8000/api/auth/login', { email, password }, { withCredentials: true });
+ const loginHandler = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-      dispatch(setUserData(res.data))
-      console.log(res.data);
-      setLoading(false);
-      navigate("/");
-       toast.success("Login Successfully");
-    } catch (error) {
-      setLoading(false);
-      toast.error(error.response.data.message);
-    }
-  };
+  try {
+    const res = await axios.post(
+      "http://localhost:8000/api/auth/login",
+      { email, password },
+      { withCredentials: true }
+    );
+
+    dispatch(setUserData(res.data)); // 🔴 FIX
+    toast.success("Login Successfully");
+    navigate("/");
+
+  } catch (error) {
+    toast.error(error.response?.data?.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
   return (
     <div className="bg-[#dddbdb] w-screen h-screen flex justify-center items-center">
       <form onSubmit={loginHandler} className="w-[90%] md:w-200 h-150 bg-white shadow-xl rounded-2xl flex ">
@@ -93,7 +99,7 @@ const Login = () => {
           {/* forgot password */}
           <div
             className="text-[#6f6f6f] underline underline-offset-1  cursor-pointer"
-            onClick={() => navigate("/forgot-password")}
+            onClick={() => navigate("/forgotpassword")}
           >
             Forgot your Password{" "}
           </div>
