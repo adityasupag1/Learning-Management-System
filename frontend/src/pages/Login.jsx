@@ -10,6 +10,9 @@ import { toast } from "react-toastify";
 import {ClipLoader} from 'react-spinners';
 import { useDispatch } from "react-redux";
 import { setUserData } from "../redux/slices/userSlice";
+import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from "../utils/firebase";
+
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -26,8 +29,7 @@ const Login = () => {
   setLoading(true);
 
   try {
-    const res = await axios.post(
-      "http://localhost:8000/api/auth/login",
+    const res = await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/auth/login`,
       { email, password },
       { withCredentials: true }
     );
@@ -42,6 +44,46 @@ const Login = () => {
     setLoading(false);
   }
 };
+
+  const googleLogin = async () => {
+  try {
+    // 1️⃣ Firebase Google login
+    const response = await signInWithPopup(auth, provider);
+    console.log(response);
+
+    const user = response.user;
+
+    const payload = {
+      name: user.displayName,
+      email: user.email,
+      role: "", // backend can decide default role
+    };
+
+    // 2️⃣ Send Google user to backend
+    const res = await axios.post(`${import.meta.env.VITE_SERVER_URL}/api/auth/googleauth`,
+      payload,
+      { withCredentials: true }
+    );
+
+    // 3️⃣ (IMPORTANT) Update Redux from backend response
+    dispatch(setUserData(res.data.user));
+
+    toast.success("Login Successfully");
+    navigate("/");
+
+  } catch (error) {
+    console.error(error);
+
+    // ✅ SAFE error handling
+    const message =
+      error.response?.data?.message || // Axios error
+      error.message ||                 // Firebase error
+      "Google login failed";
+
+    toast.error(message);
+  }
+};
+
 
   return (
     <div className="bg-[#dddbdb] w-screen h-screen flex justify-center items-center">
@@ -114,7 +156,9 @@ const Login = () => {
           </div>
 
           {/* google login */}
-          <div className="w-[80%] h-10 border border-black rounded-md flex items-center justify-center gap-2">
+          <div
+          onClick={googleLogin}
+           className="w-[80%] h-10 border border-black rounded-md flex items-center justify-center gap-2 cursor-pointer">
             <img src={google} className="w-5 h-5" alt="Google logo" />
             <span className="text-[18px] text-gray-500">Google</span>
           </div>
