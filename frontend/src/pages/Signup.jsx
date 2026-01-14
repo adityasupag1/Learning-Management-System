@@ -9,6 +9,9 @@ import { toast } from "react-toastify";
 import {ClipLoader} from 'react-spinners';
 import { useDispatch } from "react-redux";
 import { setUserData } from "../redux/slices/userSlice";
+import { signInWithPopup } from "firebase/auth";
+import { provider,auth } from "../utils/firebase";
+import { serverUrl } from "../config/server";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -49,6 +52,28 @@ const Signup = () => {
       }
     }
   };
+
+  const googleSignup = async()=>{
+    try {
+      const response = await signInWithPopup(auth,provider)
+      console.log(response);
+      let user = response.user
+      let Gname = user.displayName
+      let Gemail = user.email
+      const res = await axios.post(`${serverUrl}/api/auth/googleauth`,{name : Gname, email:Gemail,role}, {withCredentials : true});
+      dispatch(setUserData(res.data));
+      navigate('/')
+      toast.success("Signup Successfully")
+
+    } catch (error) {
+      setLoading(false);
+      if (error.response) {
+       toast.error(error.response.data.message); // "Email Already Exist"
+      } else {
+       toast.error("Server not responding");
+      }
+    }
+  }
 
   return (
     <div className="bg-[#dddbdb] w-screen h-screen flex justify-center items-center">
@@ -150,7 +175,9 @@ const Signup = () => {
           </div>
 
           {/* google signup */}
-          <div className="w-[80%] h-10 border border-black rounded-md flex items-center justify-center gap-2">
+          <div 
+          onClick={googleSignup}
+          className="w-[80%] h-10 border border-black rounded-md flex items-center justify-center gap-2 cursor-pointer">
             <img src={google} className="w-5 h-5" alt="Google logo" />
             <span className="text-[18px] text-gray-500">Google</span>
           </div>
