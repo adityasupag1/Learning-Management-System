@@ -107,8 +107,9 @@ module.exports.sendOtpController = async (req, res) => {
     const user = await userModel.findOne({ email });
     if (!user) return res.status(400).json({ message: "User Not Found" });
 
-    const otp = Math.floor(1000 + Math.random() * 9000).toString;
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
     user.resetOtp = otp;
+    // console.log(otp)
     user.otpExpires = Date.now() + 5 * 60 * 1000;
     user.isOtpVerified = false;
 
@@ -146,7 +147,7 @@ module.exports.resetPasswrodController = async(req,res)=>{
   try {
      const {email, newpassword}= req.body;
     const user =await userModel.findOne({email});
-    if(!user || user.isOtpVerified)
+    if(!user || !user.isOtpVerified)
       return res.status(404).json({message: "Otp verification is required"})
 
     const salt = await bcrypt.genSalt(10)
@@ -158,5 +159,35 @@ module.exports.resetPasswrodController = async(req,res)=>{
 
   } catch (error) {
      return res.status(200).json({message: "Reset Password Error"})
+  }
+}
+
+module.exports.googleAuthController = async (req, res)=>{
+  try {
+    const {name, email, role}= req.body
+    const user = await userModel.findOne({email})
+    if(!user ) {
+      user = await userModel.create({
+        name,
+        email,
+        role
+      })
+    }
+   
+        // now generate jwt token
+    const token = generateToken({ id: user._id })
+
+    // storing them into cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false,      // OK for http://localhost
+      sameSite: "lax",    // 🔴 THIS IS THE KEY FIX
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    
+    return res.status(200).json(user)
+  } catch (error) {
+     return res.status(200).json({message: `GooleAuth Error ${error}`})
+    
   }
 }
