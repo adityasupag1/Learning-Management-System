@@ -111,7 +111,7 @@ const Navbar = () => {
 
         {/* ---------- HAMBURGER ICON (MOBILE) ---------- */}
         <GiHamburgerMenu
-          className="w-8.75 h-8.75 lg:hidden text-black cursor-pointer"
+          className="w-8.75 h-8.75 lg:hidden text-white cursor-pointer"
           onClick={() => setShowHam(true)}
         />
 
