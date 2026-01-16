@@ -14,3 +14,15 @@ module.exports.getCurrentUser = async (req , res) =>{
     return res.status(5000).json({ message: `Get Current User Error ${error}` });
    }
 }
+
+module.exports.updateProfile = async (req, res)=>{
+  try {
+      const userId = req.userId;
+      const {description, name} = req.body;
+      if(req.file){
+        
+      }
+  } catch (error) {
+    
+  }
+}
